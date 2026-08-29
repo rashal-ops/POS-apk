@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.9.0'
+    ext.kotlin_version = '1.8.22'
     repositories {
         google()
         mavenCentral()
@@ -24,6 +24,17 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(':app')
+    
+    // حل مشكلة المكتبات القديمة مثل blue_thermal_printer التي تفتقر للـ namespace
+    afterEvaluate { subproject ->
+        if (subproject.hasProperty('android')) {
+            subproject.android {
+                if (namespace == null) {
+                    namespace subproject.group ?: "com.example.${subproject.name.replace('-', '_')}"
+                }
+            }
+        }
+    }
 }
 
 tasks.register("clean", Delete) {
