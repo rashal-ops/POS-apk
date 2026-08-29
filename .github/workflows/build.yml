@@ -8,18 +8,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # 1. جلب الكود من المستودع
       - uses: actions/checkout@v3
 
+      # 2. إعداد بيئة Java
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: '17'
       
+      # 3. إعداد بيئة Flutter
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.x'
 
-      # 1. إنشاء مفتاح التوقيع تلقائياً داخل السيرفر بدون كمبيوتر
+      # 4. إنشاء مفتاح التوقيع تلقائيًا داخل السيرفر
       - name: Generate Keystore Automatically
         run: |
           keytool -genkey -v -keystore android/app/upload-keystore.jks \
@@ -27,7 +30,7 @@ jobs:
           -alias upload -keyalg RSA -keysize 2048 -validity 10000 \
           -dname "CN=POS App, OU=IT, O=POS, L=City, S=State, C=US"
 
-      # 2. إعداد ملف البيانات للمشروع
+      # 5. إنشاء ملف الخصائص ربط التوقيع
       - name: Create key.properties
         run: |
           echo "storePassword=MySecretPass123" > android/key.properties
@@ -35,22 +38,24 @@ jobs:
           echo "keyAlias=upload" >> android/key.properties
           echo "storeFile=upload-keystore.jks" >> android/key.properties
 
+      # 6. تحميل الحزم والمكتبات
       - run: flutter pub get
 
-      # 3. بناء ملف AAB المخصص لمتجر Google Play
+      # 7. بناء ملف AAB المخصص لمتجر Google Play
       - name: Build Android App Bundle (AAB)
         run: flutter build appbundle --release --build-number=${{ github.run_number }}
 
-      # 4. بناء ملف APK للتثبيت المباشر على الأندرويد
+      # 8. بناء ملف APK للتثبيت المباشر على الأندرويد
       - name: Build Android APK
         run: flutter build apk --release --build-number=${{ github.run_number }}
 
-      # 5. حفظ الملفات للتحميل
+      # 9. رفع ملف AAB كـ Artifact
       - uses: actions/upload-artifact@v3
         with:
           name: google-play-aab
           path: build/app/outputs/bundle/release/app-release.aab
 
+      # 10. رفع ملف APK كـ Artifact
       - uses: actions/upload-artifact@v3
         with:
           name: direct-install-apk
