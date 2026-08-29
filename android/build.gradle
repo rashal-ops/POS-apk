@@ -28,12 +28,14 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
-// إضافة الـ namespace لكافة المكتبات دون استخدام afterEvaluate
+// إضافة namespace للمكتبات القديمة التي تفتقر إليه مع تجنب الأخطاء
 subprojects {
-    plugins.whenPluginAdded { plugin ->
-        if (plugin.class.name.startsWith("com.android.build.gradle")) {
-            if (project.android.namespace == null) {
-                project.android.namespace = "com.example.${project.name.replace('-', '_')}"
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                if (namespace == null) {
+                    namespace "com.example.${project.name.replace('-', '_')}"
+                }
             }
         }
     }
