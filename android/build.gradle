@@ -19,19 +19,21 @@ allprojects {
 }
 
 rootProject.buildDir = '../build'
+
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+
 subprojects {
     project.evaluationDependsOn(':app')
-    
-    // حل مشكلة المكتبات القديمة مثل blue_thermal_printer التي تفتقر للـ namespace
-    afterEvaluate { subproject ->
-        if (subproject.hasProperty('android')) {
-            subproject.android {
-                if (namespace == null) {
-                    namespace subproject.group ?: "com.example.${subproject.name.replace('-', '_')}"
-                }
+}
+
+// إضافة الـ namespace لكافة المكتبات دون استخدام afterEvaluate
+subprojects {
+    plugins.whenPluginAdded { plugin ->
+        if (plugin.class.name.startsWith("com.android.build.gradle")) {
+            if (project.android.namespace == null) {
+                project.android.namespace = "com.example.${project.name.replace('-', '_')}"
             }
         }
     }
