@@ -6,7 +6,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:8.1.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -28,15 +28,11 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
-// إضافة namespace للمكتبات القديمة التي تفتقر إليه مع تجنب الأخطاء
+// إصلاح مشكلة المكتبات القديمة مع Gradle 8 بدون أخطاء afterEvaluate
 subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            project.android {
-                if (namespace == null) {
-                    namespace "com.example.${project.name.replace('-', '_')}"
-                }
-            }
+    plugins.withId('com.android.library') {
+        if (!project.android.hasProperty('namespace') || project.android.namespace == null) {
+            project.android.namespace = "com.example.${project.name.replace('-', '_')}"
         }
     }
 }
