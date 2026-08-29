@@ -8,29 +8,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # 1. جلب الكود من المستودع
       - uses: actions/checkout@v3
 
-      # 2. إعداد بيئة Java
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: '17'
-      
-      # 3. إعداد بيئة Flutter
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.x'
 
-      # 4. إنشاء مفتاح التوقيع تلقائيًا داخل السيرفر
-      - name: Generate Keystore Automatically
+      - name: Generate Keystore
         run: |
-          keytool -genkey -v -keystore android/app/upload-keystore.jks \
-          -storepass MySecretPass123 -keypass MySecretPass123 \
-          -alias upload -keyalg RSA -keysize 2048 -validity 10000 \
-          -dname "CN=POS App, OU=IT, O=POS, L=City, S=State, C=US"
+          mkdir -p android/app
+          keytool -genkey -v -keystore android/app/upload-keystore.jks -storepass MySecretPass123 -keypass MySecretPass123 -alias upload -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=POS, OU=IT, O=POS, L=City, S=State, C=US"
 
-      # 5. إنشاء ملف الخصائص ربط التوقيع
       - name: Create key.properties
         run: |
           echo "storePassword=MySecretPass123" > android/key.properties
@@ -38,25 +31,21 @@ jobs:
           echo "keyAlias=upload" >> android/key.properties
           echo "storeFile=upload-keystore.jks" >> android/key.properties
 
-      # 6. تحميل الحزم والمكتبات
-      - run: flutter pub get
+      - name: Install Dependencies
+        run: flutter pub get
 
-      # 7. بناء ملف AAB المخصص لمتجر Google Play
-      - name: Build Android App Bundle (AAB)
-        run: flutter build appbundle --release --build-number=${{ github.run_number }}
+      - name: Build APK
+        run: flutter build apk --release
 
-      # 8. بناء ملف APK للتثبيت المباشر على الأندرويد
-      - name: Build Android APK
-        run: flutter build apk --release --build-number=${{ github.run_number }}
+      - name: Build AAB
+        run: flutter build appbundle --release
 
-      # 9. رفع ملف AAB كـ Artifact
-      - uses: actions/upload-artifact@v3
-        with:
-          name: google-play-aab
-          path: build/app/outputs/bundle/release/app-release.aab
-
-      # 10. رفع ملف APK كـ Artifact
       - uses: actions/upload-artifact@v3
         with:
           name: direct-install-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: google-play-aab
+          path: build/app/outputs/bundle/release/app-release.aab
