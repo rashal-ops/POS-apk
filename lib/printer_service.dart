@@ -55,7 +55,7 @@ class PrinterService {
 
       bluetooth.printNewLine();
       bluetooth.printCustom("Thank you for your business!", 1, 1);
-      bluetooth.printPaper();
+      bluetooth.printNewLine();
     }
   }
 }
