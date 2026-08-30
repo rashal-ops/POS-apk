@@ -34,6 +34,14 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
+      # الخطوة السحرية لتنظيف ملف المكتبة من التعارض مع AGP 8.0
+      - name: Fix blue_thermal_printer Manifest for AGP 8.0
+        run: |
+          sed -i 's/package="id.kakzaki.blue_thermal_printer"//g' /home/runner/.pub-cache/hosted/pub.dev/blue_thermal_printer-*/android/src/main/AndroidManifest.xml
+
+      - name: Build APK
+        run: flutter build apk --release
+
       - name: Build APK
         run: flutter build apk --release
 
